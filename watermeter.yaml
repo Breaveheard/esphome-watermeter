@@ -1,0 +1,115 @@
+---
+substitutions:
+  device_name: watermeter
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: d1_mini_pro
+  esp8266_restore_from_flash : true
+  project:
+    name: breaveheard.watermeter
+    version: "2.4"
+
+wifi:
+  ap:
+    ssid: "Water-Meter Fallback Hotspot"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+    
+ota:
+  platform: esphome
+  
+dashboard_import:
+  package_import_url: github://Breaveheard/esphome-watermeter/watermeter.yaml@main
+
+debug:
+
+text_sensor:
+  - platform: version
+    name: Water-Meter ESPHome Version
+  - platform: wifi_info
+    ip_address:
+      name: Water-Meter IP
+    ssid:
+      name: Water-Meter SSID
+    bssid:
+      name: Water-Meter BSSID
+
+globals:
+  - id: total_pulses
+    type: int
+    restore_value: true
+    initial_value: '0'  # startet mit 0
+  - id: imp_ratio
+    type: float
+    restore_value: false
+    initial_value: '0.1'  # vom Gaszaehler
+  - id: Zustandszahl
+    type: float
+    restore_value: false
+    initial_value: '0.9645'  # aus der Gasrechnung
+  - id: Brennwert
+    type: float
+    restore_value: false
+    initial_value: '10.362'  # aus der Gasrechnung  
+  - id: initial_consumption
+    type: float
+    restore_value: false
+    initial_value: '0'  # hier kann der Gaszählerstand initialisiert werden (Faktor 1000 um einen genaueren Wert zu erzeugen)
+  - id: initial_energy_consumption
+    type: float
+    restore_value: false
+    initial_value: id(initial_consumption) * id(Brennwert) * id(Zustandszahl) / 1000.0
+    
+binary_sensor:
+  - platform: gpio
+    id: internal_pulse_counter
+    pin:
+      number: D4
+      mode: INPUT_PULLUP
+    name: "Live-Impuls"
+    filters:
+      - delayed_on: 100ms
+    on_press:
+      then:
+        - lambda: id(total_pulses) += 1;      
+
+  - platform: status
+    name: "Status Gas-Meter"
+
+sensor:
+  - platform: template
+    name: "Gasverbrauch"
+    device_class: gas
+    update_interval : 10s    
+    unit_of_measurement: "m³"
+    state_class: total_increasing
+    icon: "mdi:fire"
+    accuracy_decimals: 2
+    lambda: return (id(initial_consumption)/1000.0) + (id(total_pulses) * id(imp_ratio));
+
+  - platform: template
+    name: 'Gasverbrauch Energy'
+    device_class: energy
+    state_class: total_increasing
+    update_interval : 10s    
+    icon: 'mdi:fire'
+    accuracy_decimals: 1
+    unit_of_measurement: "kWh"
+    lambda: return id(initial_energy_consumption) + (id(total_pulses) * id(imp_ratio) * id(Brennwert) * id(Zustandszahl));
+    
+  - platform: template
+    name: 'Pulse Counter total'
+    update_interval : 10s    
+    icon: "mdi:counter"
+    accuracy_decimals: 0
+    unit_of_measurement: "pulses"
+    lambda: return id(total_pulses);
+
