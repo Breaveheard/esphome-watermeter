@@ -9,9 +9,6 @@ esp8266:
 
 esphome:
   name: ${device_name}
-  platform: ESP8266
-  board: d1_mini_pro
-  esp8266_restore_from_flash : true
   project:
     name: breaveheard.watermeter
     version: "2.5"
