@@ -1,4 +1,4 @@
-   
+---
 substitutions:
   device_name: watermeter
 
@@ -11,7 +11,7 @@ esphome:
   name: ${device_name}
   project:
     name: breaveheard.watermeter
-    version: "2.5"
+    version: "2.6"
 
 wifi:
   ap:
