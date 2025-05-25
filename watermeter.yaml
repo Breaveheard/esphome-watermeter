@@ -64,7 +64,7 @@ globals:
   - id: Brennwert
     type: float
     restore_value: false
-    initial_value: '10.362'  # aus der Gasrechnung  
+    initial_value: '10.362'  # aus der Gasrechnung
   - id: initial_consumption
     type: float
     restore_value: false
@@ -78,7 +78,7 @@ binary_sensor:
   - platform: gpio
     id: internal_pulse_counter
     pin:
-      number: D4
+      number: GPIO2  # D4 is GPIO2 on ESP8266, using GPIO number is preferred
       mode: INPUT_PULLUP
     name: "Live-Impuls"
     filters:
@@ -89,6 +89,7 @@ binary_sensor:
 
   - platform: status
     name: "Status Gas-Meter"
+    entity_category: diagnostic
 
 sensor:
   - platform: template
