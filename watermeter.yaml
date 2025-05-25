@@ -1,4 +1,4 @@
----
+   
 substitutions:
   device_name: watermeter
 
@@ -20,10 +20,10 @@ wifi:
 
 captive_portal:
 
-# Enable logging
+				
 logger:
 
-# Enable Home Assistant API
+						   
 api:
     
 ota:
@@ -53,24 +53,12 @@ globals:
   - id: imp_ratio
     type: float
     restore_value: false
-    initial_value: '0.1'  # vom Gaszaehler
-  - id: Zustandszahl
-    type: float
-    restore_value: false
-    initial_value: '0.9645'  # aus der Gasrechnung
-  - id: Brennwert
-    type: float
-    restore_value: false
-    initial_value: '10.362'  # aus der Gasrechnung
+    initial_value: '0.01'  # 10 Liter pro Impuls = 0.01 m³
   - id: initial_consumption
     type: float
     restore_value: false
-    initial_value: '0'  # hier kann der Wasserzaehlerstand initialisiert werden (Faktor 1000 um einen genaueren Wert zu erzeugen)
-  - id: initial_energy_consumption
-    type: float
-    restore_value: false
-    initial_value: id(initial_consumption) * id(Brennwert) * id(Zustandszahl) / 1000.0
-    
+    initial_value: '0'  # in m³
+
 binary_sensor:
   - platform: gpio
     id: internal_pulse_counter
@@ -82,36 +70,26 @@ binary_sensor:
       - delayed_on: 100ms
     on_press:
       then:
-        - lambda: id(total_pulses) += 1;      
+        - lambda: id(total_pulses) += 1;
 
   - platform: status
-    name: "Status Gas-Meter"
+    name: "Status Water-Meter"
     entity_category: diagnostic
 
 sensor:
   - platform: template
-    name: "Gasverbrauch"
-    device_class: gas
-    update_interval : 10s    
+    name: "Wasserverbrauch"
+    device_class: water
+    update_interval: 10s
     unit_of_measurement: "m³"
     state_class: total_increasing
-    icon: "mdi:fire"
+    icon: "mdi:water"
     accuracy_decimals: 2
-    lambda: return (id(initial_consumption)/1000.0) + (id(total_pulses) * id(imp_ratio));
+    lambda: return id(initial_consumption) + (id(total_pulses) * id(imp_ratio));
 
   - platform: template
-    name: 'Gasverbrauch Energy'
-    device_class: energy
-    state_class: total_increasing
-    update_interval : 10s    
-    icon: 'mdi:fire'
-    accuracy_decimals: 1
-    unit_of_measurement: "kWh"
-    lambda: return id(initial_energy_consumption) + (id(total_pulses) * id(imp_ratio) * id(Brennwert) * id(Zustandszahl));
-    
-  - platform: template
-    name: 'Pulse Counter total'
-    update_interval : 10s    
+    name: "Pulse Counter total"
+    update_interval: 10s
     icon: "mdi:counter"
     accuracy_decimals: 0
     unit_of_measurement: "pulses"
